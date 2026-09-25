@@ -8,7 +8,7 @@ Several Call of Duty titles released for the Playstation 3 are plagued by a vari
 
 Here I am going to share what the cause is and how to fix it.
 
-# What are wrong with these games?
+# What is wrong with these games?
 To my knowledge as of writing this, the **following games have issues** today for **new accounts** that haven't played a Call of Duty **prior to somewhere around 2018**.
 * **Modern Warfare 2 (IW4)** - Progression/stats do not save.
 * **Black Ops 1 (T5)**		 - Progression/stats do not save.
@@ -177,9 +177,9 @@ I could very quickly verify that the root cause of MW3 and BO1 is the exact same
 Now because of just the natural progression of development, underlying engine modifications, changes in the Demonware SDK, the previous solution of just retrieving the XUID from the Demonware auth response and putting it in the local cache wasn't as straightforward in both BO1 and MW3. With the help of Claude and a bit of reverse engineering however, I could very easily port this to [my project **CODPatch-PS3**](https://github.com/sirenuf/CODPatch-PS3) to make this fix portable (albeit with a wildcard memory signature scanner for BO1 because of the aforementioned jumping offsets, and an additional thread which watches and corrects the identity post auth. You don't notice any of this however).
 
 ## What about BO2?
-I am 99.999% sure BO2 suffers from the exact same underlying XUID missmatch. The reason why I won't go over it however is because I don't need to. [setsid's **BO2 Freeze Patch**](https://github.com/setsid/bo2-ps3-psn-freeze-fix) addresses the freezing issue, and the fix is legit to NOP one line in all three different executables. Reading his report, I think it is safe to assume that the issue is also related to the our broken 64 bit XUID number.
+I am 99% sure BO2 suffers from the exact same underlying XUID missmatch as MW2, MW3 and BO1. The reason why I won't go over it however is because I don't need to. [setsid's **BO2 Freeze Patch**](https://github.com/setsid/bo2-ps3-psn-freeze-fix) addresses the freezing issue, and the fix is just a one liner at the same space in all three executables.
 
-After NOPing these lines, with no XUID adjustment, the game plays and runs exactly how it should. So there is no real reason to keep trying to find out on a deeper level at how the T6 engine works. If you're capable and interested though, issues and PRs are welcome.
+There is no real benefit to investigate the T6 engine at a lower level with this new knowledge to see if you can approach this in a different way to what setsid has already done, as the game plays and functions exactly as it should. If you're capable and motivated however, additional documentation is welcome via issues or PRs.
 
 # Why does the XUID even differ?
 Well to start of, in 2019 Sony decided to introduce the ability to change your current PSN username (aka online ID). It was in 2018 when Sony started playing with this idea, [adding it to their APIs](https://kotaku.com/game-developers-say-theyre-preparing-for-psn-name-chang-1829521254).
@@ -195,13 +195,15 @@ $ ./xuid.sh 8534295246308455420
 0x739234CEC1957D40
 ```
 
-Yup, that checks out. In case you don't remember, my actual XUID for viktor6153 as Demonware puts it is `73 92 34 CE C1 95 7D 40`, which is what we just successfully hashed via the account ID. <br>
-This means that we can now guarantee that the XUID for new accounts is going to be derived from the account ID instead, not the online ID. That is the issue we have been dealing with the entire time. <br>
-Demonware must've changed their APIs to generate new XUIDs for their new games to use the new Sony toolkit's Account ID recommendation, which consequently broke these old unsupported titles, which were programmed to always assume that XUIDs are derived from the user's current Online ID.
+This checks out. In case you don't remember, my actual XUID for viktor6153 as Demonware puts it, is `73 92 34 CE C1 95 7D 40`, which is what we just successfully hashed via the account ID above. <br>
+This means that we can now guarantee that the XUID for new accounts is going to be derived from the account ID instead, not the online ID. That is the issue we have been dealing with this entire time. <br>
+Demonware must've tweaked their APIs to use account IDs as the new argument when generating new XUIDs. This was through Sony's own request via their new toolkit revisions. <br>
+As a result, this consequently broke the traditional auth process on old unsupported titles, which were programmed to always assume that XUIDs are derived from the user's current online ID. <br>
+Old accounts work just fine, as their XUIDs are already tied and cached correctly to their current online ID. This also explains why old accounts suffer the exact same issues as new accounts after they change their PSN username.
 
 *Remember to always use static unique user identifiers for authentication kids.*
 
-To fix these issues, check out [See Also](/#See_also) or specifically [my plugin](https://github.com/sirenuf/CODPatch-PS3).
+To fix these issues, check out [See Also](/#see-also) or more specifically [my plugin](https://github.com/sirenuf/CODPatch-PS3).
 
 # See also
 * [setsid - **PS3 Tools**](https://github.com/setsid/ps3-tools)
@@ -223,3 +225,5 @@ To fix these issues, check out [See Also](/#See_also) or specifically [my plugin
 * **T6** - The codename for Black Ops 2. Also the unofficial name for the BO2 game engine.
 * **IW4** - The codename for Modern Warfare 2. Also the unofficial name for the MW2 game engine.
 * **IW5** - The codename for Modern Warfare 3. Also the unofficial name for the MW3 game engine.
+* **TU** - Title update. The periodic updates games (titles) receive.
+* **RTM** - Real Time Modding. Usually consisting of editing memory in real time while the game is running to patch functions, enable hacks, and more.
